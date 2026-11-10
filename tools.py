@@ -116,13 +116,23 @@ def fetch_webpage_content(url: str) -> str:
 
 
 @tool
-def refresh_android_webpage(url: str):
+def refresh_android_webpage(url: str) -> str:
     """
-    Refreshes the web page on the android device. Use this after you started the server.
+    Refreshes the web page on the Android device.
     Args:
-        url: its typically like this: http://192.168.1.6:5000
+        url: Typically something like http://192.168.1.6:5000
     """
-    os.system(f'adb shell am start -n com.android.chrome/com.google.android.apps.chrome.Main -d "{url}"')
+    result = subprocess.run(
+        [
+            "adb", "shell", "am", "start",
+            "-n", "com.android.chrome/com.google.android.apps.chrome.Main",
+            "-d", url
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    return result.stdout if result.stdout else result.stderr
 
 @tool
 def read_flask_logs(lines: int = 100) -> str:
@@ -161,13 +171,17 @@ def execute_adb_command(command: str) -> str:
     try:
         args = ["adb"] + command.strip().split()
         result = subprocess.run(
-            args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=30
+            args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=15
         )
-        if result.returncode == 0:
-            return result.stdout if result.stdout.strip() else "Success."
-        return f"Error: {result.stderr}"
+
+        return result.stdout if result.stdout else result.stderr
+
     except Exception as e:
-        return f"Exception: {str(e)}"
+        return str(e)
 
 
 @tool
